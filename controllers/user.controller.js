@@ -22,14 +22,23 @@ export async function loginusercontroller(req, res) {
     // ✅ Find user by firebaseUid
     let user = await UserModel.findOne({ uid: firebaseUid });
 
+     // ✅ Step 2: If not found, check if the phone already exists
     if (!user) {
-      user = await UserModel.create({
+      user = await UserModel.findOne({ mobile: phone });
+
+       if (user) {
+        // Link Firebase UID to this existing user
+        user.uid = firebaseUid;
+        await user.save();
+      } else {
+        user = await UserModel.create({
         uid: firebaseUid,
         mobile: phone,
       
         status: "Active",
       });
     }
+  }
 
     if (user.status !== "Active") {
       return res.status(403).json({ message: "Contact Admin" });
